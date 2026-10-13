@@ -1,0 +1,125 @@
+
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS WAF para el proyecto Zero Trust",
+
+  "Resources": {
+    "ZeroTrustWebACL": {
+      "Type": "AWS::WAFv2::WebACL",
+
+      "Properties": {
+        "Name": "ZeroTrust-WebACL",
+        "Description": "Proteccion web con AWS Managed Rules y Rate Limiting",
+
+        "Scope": "CLOUDFRONT",
+
+        "DefaultAction": {
+          "Allow": {}
+        },
+
+        "VisibilityConfig": {
+          "SampledRequestsEnabled": false,
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "ZeroTrustWebACL"
+        },
+
+        "Rules": [
+          {
+            "Name": "AWSManagedCommonRules",
+            "Priority": 0,
+
+            "Statement": {
+              "ManagedRuleGroupStatement": {
+                "VendorName": "AWS",
+                "Name": "AWSManagedRulesCommonRuleSet"
+              }
+            },
+
+            "OverrideAction": {
+              "None": {}
+            },
+
+            "VisibilityConfig": {
+              "SampledRequestsEnabled": false,
+              "CloudWatchMetricsEnabled": true,
+              "MetricName": "ZeroTrustCommonRules"
+            }
+          },
+
+          {
+            "Name": "AWSManagedSQLiRules",
+            "Priority": 1,
+
+            "Statement": {
+              "ManagedRuleGroupStatement": {
+                "VendorName": "AWS",
+                "Name": "AWSManagedRulesSQLiRuleSet"
+              }
+            },
+
+            "OverrideAction": {
+              "None": {}
+            },
+
+            "VisibilityConfig": {
+              "SampledRequestsEnabled": false,
+              "CloudWatchMetricsEnabled": true,
+              "MetricName": "ZeroTrustSQLiRules"
+            }
+          },
+
+          {
+            "Name": "LoginRateLimit",
+            "Priority": 2,
+
+            "Statement": {
+              "RateBasedStatement": {
+                "Limit": 20,
+                "EvaluationWindowSec": 300,
+                "AggregateKeyType": "IP",
+
+                "ScopeDownStatement": {
+                  "ByteMatchStatement": {
+                    "SearchString": "/api/auth/login",
+                    "FieldToMatch": {
+                      "UriPath": {}
+                    },
+                    "TextTransformations": [
+                      {
+                        "Priority": 0,
+                        "Type": "NONE"
+                      }
+                    ],
+                    "PositionalConstraint": "EXACTLY"
+                  }
+                }
+              }
+            },
+
+            "Action": {
+              "Block": {}
+            },
+
+            "VisibilityConfig": {
+              "SampledRequestsEnabled": false,
+              "CloudWatchMetricsEnabled": true,
+              "MetricName": "ZeroTrustLoginRateLimit"
+            }
+          }
+        ]
+      }
+    }
+  },
+
+  "Outputs": {
+    "WebACLArn": {
+      "Description": "ARN para asociar AWS WAF con CloudFront",
+      "Value": {
+        "Fn::GetAtt": [
+          "ZeroTrustWebACL",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

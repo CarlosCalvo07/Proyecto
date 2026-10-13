@@ -1,0 +1,35 @@
+
+# =====================================
+# ZERO TRUST - FAIL2BAN
+# Proteccion del inicio de sesion web
+# =====================================
+
+[nginx-auth]
+
+# Activar la proteccion
+enabled = true
+
+# Utilizar nuestro filtro personalizado
+filter = nginx-auth
+
+# Puertos protegidos
+port = http,https
+protocol = tcp
+
+# Archivo de registros de Nginx
+logpath = /var/log/nginx/access.log
+
+# Numero maximo de intentos fallidos
+maxretry = 5
+
+# Ventana de deteccion: 15 minutos
+findtime = 15m
+
+# Duracion del bloqueo: 30 minutos
+bantime = 30m
+
+# Lectura de registros
+backend = auto
+
+# Bloqueo mediante UFW
+banaction = ufw
